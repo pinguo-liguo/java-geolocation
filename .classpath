@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+	<classpathentry exported="true" kind="lib" path="/Users/travis/dev/apache-tomcat-7.0.39/lib/servlet-api.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/spring-core-4.0.5.RELEASE.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/spring-web-4.0.5.RELEASE.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/spring-webmvc-4.0.5.RELEASE.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/spring-beans-4.0.5.RELEASE.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/spring-context-4.0.5.RELEASE.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
