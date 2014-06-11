@@ -7,5 +7,12 @@ package com.geolocation.services;
  */
 public interface GeolocationService 
 {
-	String getSessionCountry(final String ipAddress);
+	// This method will do the heavy lifting, and should be invoked by a custom session filter
+	void setSessionIp(final String ipAddress);
+
+	String getSessionCountry();
+
+	String getSessionRegion();
+		
+	String getSessionCity();
 }

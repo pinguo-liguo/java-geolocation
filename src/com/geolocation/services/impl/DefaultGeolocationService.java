@@ -4,37 +4,76 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.URL;
 
+import javax.servlet.http.HttpSession;
+
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.geolocation.services.GeolocationService;
+import com.geolocation.web.session.UserGeolocation;
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.model.Omni;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 public class DefaultGeolocationService implements GeolocationService
 {
+	public final static String SESSION_REQUEST_IP_KEY = "sessionIP";
 	public final static String SESSION_REQUEST_COUNTRY_KEY = "sessionCountry";
-
-	@Override
-	public String getSessionCountry(final String ipAddress)
+	public final static String SESSION_REQUEST_REGION_KEY = "sessionRegion";
+	public final static String SESSION_REQUEST_CITY_KEY = "sessionCity";
+	
+	// Provides access to the session object for current request
+	public static HttpSession session() 
 	{
-		return getLocationForIpAddress(ipAddress);
+	    ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
+	    return attr.getRequest().getSession(true); // true == allow create
 	}
 	
-	private String getLocationForIpAddress(final String ipAddress)
+	@Override
+	public void setSessionIp(final String ipAddress)
+	{
+		// This IP check ensures we only do one lookup per session
+		String lastIpAddress = (String) session().getAttribute(SESSION_REQUEST_IP_KEY);//userGeolocation.getIpAddress();
+		if (lastIpAddress == null || !lastIpAddress.equals(ipAddress))
+		{
+			session().setAttribute(SESSION_REQUEST_IP_KEY, ipAddress);
+			getLocationForIpAddress(ipAddress);
+		}
+	}
+
+	@Override
+	public String getSessionCountry()
+	{
+		return (String) session().getAttribute(SESSION_REQUEST_COUNTRY_KEY);
+	}
+
+	@Override
+	public String getSessionRegion()
+	{
+		return (String) session().getAttribute(SESSION_REQUEST_REGION_KEY);
+	}
+	
+	@Override
+	public String getSessionCity()
+	{
+		return (String) session().getAttribute(SESSION_REQUEST_CITY_KEY);
+	}
+	
+	private void getLocationForIpAddress(final String ipAddress)
 	{
 		// First try the webservice
-		String country = getCurrentLocationForIp(ipAddress);
-		if (country == null)
+		boolean success = getCurrentLocationForIp(ipAddress);
+		if (success == false)
 		{
-			// Then try the local DB
-			country = getFallbackLocationForIp(ipAddress);
+			// Then try the local Maxmind DB as a fallback
+			getFallbackLocationForIp(ipAddress);
 		}
-		return country;
 	}
 	
 	/**
@@ -43,7 +82,7 @@ public class DefaultGeolocationService implements GeolocationService
 	 * @param ipAddress
 	 *           - IP of current incoming request
 	 */
-	private String getCurrentLocationForIp(final String ipAddress)
+	private boolean getCurrentLocationForIp(final String ipAddress)
 	{
 		final String url = "http://freegeoip.net/json/" + ipAddress;
 
@@ -72,17 +111,32 @@ public class DefaultGeolocationService implements GeolocationService
 					if ("country_code".equals(field))
 					{
 						jsonParser.nextToken();
-						return jsonParser.getText();
+						final String countryCode = jsonParser.getText();
+						session().setAttribute(SESSION_REQUEST_COUNTRY_KEY, countryCode);
+					}
+					if ("region_code".equals(field))
+					{
+						jsonParser.nextToken();
+						final String regionCode = jsonParser.getText();
+						session().setAttribute(SESSION_REQUEST_REGION_KEY, regionCode);
+					}
+					if ("city".equals(field))
+					{
+						jsonParser.nextToken();
+						final String regionCode = jsonParser.getText();
+						session().setAttribute(SESSION_REQUEST_CITY_KEY, regionCode);
 					}
 				}
+				
+				return true;
 			}
 		}
 		catch (final Exception e)
 		{
-			return null;
+			// Uh-oh
 		}
-
-        return null;
+		
+		return false;
 	}
 
 	/**
@@ -91,19 +145,22 @@ public class DefaultGeolocationService implements GeolocationService
 	 * @param ipAddress
 	 *           - IP of current incoming request
 	 */
-	private String getFallbackLocationForIp(final String ipAddress)
+	private boolean getFallbackLocationForIp(final String ipAddress)
 	{
 		try
 		{
 			final URL dbResource = DefaultGeolocationService.class.getResource("GeoLite2-Country.mmdb");
 			final DatabaseReader reader = new DatabaseReader(new File(dbResource.toURI()));
 			final Omni model = reader.omni(InetAddress.getByName(ipAddress));
+			session().setAttribute(SESSION_REQUEST_COUNTRY_KEY, model.getCountry().getIsoCode());
+			session().setAttribute(SESSION_REQUEST_REGION_KEY, model.getMostSpecificSubdivision().getIsoCode());
 			reader.close();
-			return model.getCountry().getIsoCode();
 		}
 		catch (final Exception e)
 		{
-			return null;
+			return false;
 		}
+		
+		return true;
 	}
 }
