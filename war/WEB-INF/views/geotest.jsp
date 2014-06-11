@@ -1,7 +1,7 @@
 <html>
-  <head><title>Hello :: Spring Application</title></head>
+  <head><title>Geolocation Test</title></head>
   <body>
-    <h1>Hello - Spring Application</h1>
-    <p>Greetings.</p>
+    <h1>What country do I live in?</h1>
+    <p>${country}</p>
   </body>
 </html>

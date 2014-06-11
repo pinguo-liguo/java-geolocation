@@ -25,5 +25,8 @@
   <bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping"/>
 
   <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter"/>
+  
+  <alias name="defaultGeolocationService" alias="geolocationService"/>
+  <bean name="defaultGeolocationService" class="com.geolocation.services.impl.DefaultGeolocationService"/>
 
 </beans>
