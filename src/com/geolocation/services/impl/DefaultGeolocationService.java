@@ -1,8 +1,12 @@
 package com.geolocation.services.impl;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.URL;
+import java.util.Properties;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
@@ -26,6 +30,8 @@ public class DefaultGeolocationService implements GeolocationService
 	public final static String SESSION_REQUEST_COUNTRY_KEY = "sessionCountry";
 	public final static String SESSION_REQUEST_REGION_KEY = "sessionRegion";
 	public final static String SESSION_REQUEST_CITY_KEY = "sessionCity";
+	public final static String PROJECT_PROPERTIES_PATH = "WEB-INF/resources/project.properties";
+	public final static String MAXMIND_DB_PATH_DEFAULT = "WEB-INF/resources/GeoLite2-Country.mmdb";
 	
 	// Provides access to the session object for current request
 	private static HttpSession getSession() 
@@ -145,7 +151,7 @@ public class DefaultGeolocationService implements GeolocationService
 	}
 
 	/**
-	 * As a fallback, his will look up the location in a local DB. This will be called second.
+	 * As a fallback, this will look up the location in a local DB. This will be called second.
 	 * 
 	 * @param ipAddress
 	 *           - IP of current incoming request
@@ -154,7 +160,7 @@ public class DefaultGeolocationService implements GeolocationService
 	{
 		try
 		{
-			final String dbPath = getServletContext().getRealPath("WEB-INF/resources/GeoLite2-Country.mmdb");
+			final String dbPath = getMaxmindDBPath();
 			final DatabaseReader reader = new DatabaseReader(new File(dbPath));
 			final Omni model = reader.omni(InetAddress.getByName(ipAddress));
 			getSession().setAttribute(SESSION_REQUEST_COUNTRY_KEY, model.getCountry().getIsoCode());
@@ -168,5 +174,38 @@ public class DefaultGeolocationService implements GeolocationService
 		}
 		
 		return true;
+	}
+	
+	/**
+	 * This method will look in "project.properties" in WEB-INF/resources and see if a custom path is
+	 * specified for the Maxmind DB. If found, this method returns that path, and otherwise a default one.
+	 * This is useful for servlet containers that do not expand WAR files, like tomcat, where you might 
+	 * want to place the Maxmind DB somewhere else on the file system.
+	 * 
+	 * @return String
+	 */
+	private String getMaxmindDBPath()
+	{
+		InputStream resourceContent = getServletContext().getResourceAsStream(PROJECT_PROPERTIES_PATH);
+		
+		if (resourceContent != null)
+		{
+			try 
+			{
+				Properties properties = new Properties();
+				properties.load(resourceContent);
+				
+				String dbPath = properties.getProperty("maxmind.db.path");
+				if (dbPath != null) {
+					return dbPath;
+				}
+			} 
+			catch (Exception e)
+			{
+				// Uh-oh
+			}
+		}
+		
+		return getServletContext().getRealPath(MAXMIND_DB_PATH_DEFAULT);
 	}
 }
