@@ -4,22 +4,21 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.URL;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
+
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.geolocation.services.GeolocationService;
-import com.geolocation.web.session.UserGeolocation;
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.model.Omni;
-
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 public class DefaultGeolocationService implements GeolocationService
 {
@@ -29,20 +28,26 @@ public class DefaultGeolocationService implements GeolocationService
 	public final static String SESSION_REQUEST_CITY_KEY = "sessionCity";
 	
 	// Provides access to the session object for current request
-	public static HttpSession session() 
+	private static HttpSession getSession() 
 	{
 	    ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
 	    return attr.getRequest().getSession(true); // true == allow create
+	}
+	
+	// Provides access to the servlet context for the request
+	private static ServletContext getServletContext() 
+	{
+		return getSession().getServletContext();
 	}
 	
 	@Override
 	public void setSessionIp(final String ipAddress)
 	{
 		// This IP check ensures we only do one lookup per session
-		String lastIpAddress = (String) session().getAttribute(SESSION_REQUEST_IP_KEY);//userGeolocation.getIpAddress();
+		String lastIpAddress = (String) getSession().getAttribute(SESSION_REQUEST_IP_KEY);//userGeolocation.getIpAddress();
 		if (lastIpAddress == null || !lastIpAddress.equals(ipAddress))
 		{
-			session().setAttribute(SESSION_REQUEST_IP_KEY, ipAddress);
+			getSession().setAttribute(SESSION_REQUEST_IP_KEY, ipAddress);
 			getLocationForIpAddress(ipAddress);
 		}
 	}
@@ -50,19 +55,19 @@ public class DefaultGeolocationService implements GeolocationService
 	@Override
 	public String getSessionCountry()
 	{
-		return (String) session().getAttribute(SESSION_REQUEST_COUNTRY_KEY);
+		return (String) getSession().getAttribute(SESSION_REQUEST_COUNTRY_KEY);
 	}
 
 	@Override
 	public String getSessionRegion()
 	{
-		return (String) session().getAttribute(SESSION_REQUEST_REGION_KEY);
+		return (String) getSession().getAttribute(SESSION_REQUEST_REGION_KEY);
 	}
 	
 	@Override
 	public String getSessionCity()
 	{
-		return (String) session().getAttribute(SESSION_REQUEST_CITY_KEY);
+		return (String) getSession().getAttribute(SESSION_REQUEST_CITY_KEY);
 	}
 	
 	private void getLocationForIpAddress(final String ipAddress)
@@ -112,19 +117,19 @@ public class DefaultGeolocationService implements GeolocationService
 					{
 						jsonParser.nextToken();
 						final String countryCode = jsonParser.getText();
-						session().setAttribute(SESSION_REQUEST_COUNTRY_KEY, countryCode);
+						getSession().setAttribute(SESSION_REQUEST_COUNTRY_KEY, countryCode);
 					}
 					if ("region_code".equals(field))
 					{
 						jsonParser.nextToken();
 						final String regionCode = jsonParser.getText();
-						session().setAttribute(SESSION_REQUEST_REGION_KEY, regionCode);
+						getSession().setAttribute(SESSION_REQUEST_REGION_KEY, regionCode);
 					}
 					if ("city".equals(field))
 					{
 						jsonParser.nextToken();
 						final String regionCode = jsonParser.getText();
-						session().setAttribute(SESSION_REQUEST_CITY_KEY, regionCode);
+						getSession().setAttribute(SESSION_REQUEST_CITY_KEY, regionCode);
 					}
 				}
 				
@@ -149,11 +154,12 @@ public class DefaultGeolocationService implements GeolocationService
 	{
 		try
 		{
-			final URL dbResource = DefaultGeolocationService.class.getResource("GeoLite2-Country.mmdb");
-			final DatabaseReader reader = new DatabaseReader(new File(dbResource.toURI()));
+			final String dbPath = getServletContext().getRealPath("WEB-INF/resources/GeoLite2-Country.mmdb");
+			final DatabaseReader reader = new DatabaseReader(new File(dbPath));
 			final Omni model = reader.omni(InetAddress.getByName(ipAddress));
-			session().setAttribute(SESSION_REQUEST_COUNTRY_KEY, model.getCountry().getIsoCode());
-			session().setAttribute(SESSION_REQUEST_REGION_KEY, model.getMostSpecificSubdivision().getIsoCode());
+			getSession().setAttribute(SESSION_REQUEST_COUNTRY_KEY, model.getCountry().getIsoCode());
+			getSession().setAttribute(SESSION_REQUEST_REGION_KEY, model.getMostSpecificSubdivision().getIsoCode());
+			getSession().setAttribute(SESSION_REQUEST_CITY_KEY, model.getCity().getName());
 			reader.close();
 		}
 		catch (final Exception e)

@@ -9,6 +9,11 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.geolocation.services.GeolocationService;
 
+/**
+ * This interceptor is used to initiate the geolocation lookup for the request.
+ * @author travis
+ *
+ */
 public class GeolocationInterceptor implements HandlerInterceptor 
 {
 	@Resource(name = "geolocationService")
@@ -19,7 +24,6 @@ public class GeolocationInterceptor implements HandlerInterceptor
 			HttpServletResponse response, Object handler, Exception ex)
 			throws Exception 
 	{
-		// TODO Auto-generated method stub
 
 	}
 
@@ -27,7 +31,6 @@ public class GeolocationInterceptor implements HandlerInterceptor
 	public void postHandle(HttpServletRequest request, HttpServletResponse response,
 			Object handler, ModelAndView modelAndView) throws Exception 
 	{
-		// TODO Auto-generated method stub
 
 	}
 
