@@ -1,11 +1,8 @@
 package com.geolocation.services.impl;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.InetAddress;
-import java.net.URL;
 import java.util.Properties;
 
 import javax.servlet.ServletContext;
@@ -50,7 +47,7 @@ public class DefaultGeolocationService implements GeolocationService
 	public void setSessionIp(final String ipAddress)
 	{
 		// This IP check ensures we only do one lookup per session
-		String lastIpAddress = (String) getSession().getAttribute(SESSION_REQUEST_IP_KEY);//userGeolocation.getIpAddress();
+		String lastIpAddress = (String) getSession().getAttribute(SESSION_REQUEST_IP_KEY);
 		if (lastIpAddress == null || !lastIpAddress.equals(ipAddress))
 		{
 			getSession().setAttribute(SESSION_REQUEST_IP_KEY, ipAddress);
