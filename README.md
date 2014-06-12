@@ -30,4 +30,16 @@ A controller, for example, could query the service for geolocation information u
 
 This class simply grabs the IP address from each request and passes it to the DefaultGeolocationService.
 
-By the time code execution reaches a controller, your business logic can reliably query this location information from the geolocation service.
+#### How to use it:
+
+By the time code execution reaches a controller, your business logic can reliably query this location information from the geolocation service. The **GeolocationTestController** in the project provides an example:
+
+    final String requestCountry = geolocationService.getSessionCountry();
+		
+    // Only do something or show something for US users
+    if ("US".equalsIgnoreCase(requestCountry))
+    {
+	// Some business logic here
+			
+	model.addAttribute("image", "http://placekitten.com/200/300");
+    }
