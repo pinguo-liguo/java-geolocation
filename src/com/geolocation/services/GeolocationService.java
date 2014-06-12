@@ -7,7 +7,11 @@ package com.geolocation.services;
  */
 public interface GeolocationService 
 {
-	// This method will do the heavy lifting, and should be invoked by a custom session filter
+	/**
+	 *  This method will set the IP address for the session and invoke a geolocation lookup. It should ideally
+	 *  only be invoked by the GeolocationInterceptor, but it is acceptable to invoke it otherwise.
+	 * @param ipAddress
+	 */
 	void setSessionIp(final String ipAddress);
 
 	String getSessionCountry();

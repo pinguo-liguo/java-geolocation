@@ -19,7 +19,17 @@ public class GeolocationTestController
 	@RequestMapping(method = RequestMethod.GET)
     public String testGeolocationService(Model model) 
 	{
-		model.addAttribute("country", geolocationService.getSessionCountry());
+		final String requestCountry = geolocationService.getSessionCountry();
+		
+		// Only do something or show something for US users
+		if ("US".equalsIgnoreCase(requestCountry))
+		{
+			// Some business logic here
+			
+			model.addAttribute("image", "http://placekitten.com/200/300");
+		}
+		
+		model.addAttribute("country", requestCountry);
 		model.addAttribute("region", geolocationService.getSessionRegion());
 		model.addAttribute("city", geolocationService.getSessionCity());
         return "geotest";
