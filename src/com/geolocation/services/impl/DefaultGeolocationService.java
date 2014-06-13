@@ -28,7 +28,7 @@ public class DefaultGeolocationService implements GeolocationService
 	public final static String SESSION_REQUEST_REGION_KEY = "sessionRegion";
 	public final static String SESSION_REQUEST_CITY_KEY = "sessionCity";
 	public final static String PROJECT_PROPERTIES_PATH = "WEB-INF/resources/project.properties";
-	public final static String MAXMIND_DB_PATH_DEFAULT = "WEB-INF/resources/GeoLite2-Country.mmdb";
+	public final static String MAXMIND_DB_PATH_DEFAULT = "WEB-INF/resources/GeoLite2-City.mmdb";
 	
 	// Provides access to the session object for current request
 	private static HttpSession getSession() 

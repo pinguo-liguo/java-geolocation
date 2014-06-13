@@ -43,3 +43,9 @@ By the time code execution reaches a controller, your business logic can reliabl
 			
 	model.addAttribute("image", "http://placekitten.com/200/300");
     }
+
+#### Some notes on MaxMind:
+
+This project includes GeoLite2 data created by MaxMind, available from http://www.maxmind.com.
+
+There are two database files provided in WEB-INF/resources. If you only need to be as granular as the country of the request, you can use "GeoLite2-Country.mmdb". If you need more specific sub-divisions like city and state, use "GeoLite2-City.mmdb".
